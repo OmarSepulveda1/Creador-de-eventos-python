@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block titulo %}Inicio - Eventos{% endblock %}
+
+{% block contenido %}
+<div class="py-4">
+	<h1>Página de inicio de Eventos</h1>
+	<p>Bienvenido. Usa los botones para crear un nuevo evento o ver el registro.</p>
+
+	<a class="btn btn-primary" href="{% url 'crear_evento' %}">Crear nuevo evento</a>
+</div>
+{% endblock %}
