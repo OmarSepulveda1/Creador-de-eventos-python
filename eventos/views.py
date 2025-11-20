@@ -1,42 +1,76 @@
-from django.shortcuts import render, redirect
-from .forms import EventoForm, ParticipanteForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from .forms import EventoForm, ParticipanteForm, ParticipanteFormSet
+from .models import Evento, Participante
 
 
 def home(request):
-    return render(request, 'eventos/home.html')
+    # Mostrar lista de eventos guardados en la página principal
+    eventos = Evento.objects.all().order_by('-fecha')
+    return render(request, 'eventos/home.html', {'eventos': eventos})
 
+@login_required(login_url='/admin/login/')
 def registrar_evento(request):
-    participante_forms = []
-
     if request.method == "POST":
         evento_form = EventoForm(request.POST)
-        total_participantes = int(request.POST.get("total_participantes", 1))
+        participante_formset = ParticipanteFormSet(request.POST, prefix='participants')
 
-        # Crear lista de formularios de participantes
-        for i in range(total_participantes):
-            participante_forms.append(
-                ParticipanteForm(request.POST, prefix=f"p{i}")
-            )
+        if evento_form.is_valid() and participante_formset.is_valid():
+            evento = evento_form.save(commit=False)
+            evento.owner = request.user
+            evento.save()
 
-        if evento_form.is_valid() and all(f.is_valid() for f in participante_forms):
-            evento = evento_form.save()
-
-            for form in participante_forms:
-                participante = form.save(commit=False)
-                participante.evento = evento
-                participante.save()
+            # Crear participantes desde el formset
+            for pform in participante_formset:
+                nombre = pform.cleaned_data.get('nombre')
+                correo = pform.cleaned_data.get('correo')
+                if nombre and correo:
+                    Participante.objects.create(evento=evento, nombre=nombre, correo=correo)
 
             return redirect("registro_exitoso")
-
     else:
         evento_form = EventoForm()
-        participante_forms = [ParticipanteForm(prefix="p0")]
+        participante_formset = ParticipanteFormSet(prefix='participants')
 
     return render(request, "evento_form.html", {
         "evento_form": evento_form,
-        "participante_forms": participante_forms,
+        "participante_formset": participante_formset,
     })
 
 
 def registro_exitoso(request):
     return render(request, "registro_exitoso.html")
+
+
+@login_required(login_url='/admin/login/')
+def editar_evento(request, pk):
+    evento = get_object_or_404(Evento, pk=pk)
+    # sólo usuarios admin/staff pueden editar
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Solo administradores pueden editar este evento')
+    if request.method == 'POST':
+        form = EventoForm(request.POST, instance=evento)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = EventoForm(instance=evento)
+
+    # Reuse the creation template but without participant forms
+    return render(request, 'evento_form.html', {
+        'evento_form': form,
+        'participante_forms': [],
+    })
+
+
+@login_required(login_url='/admin/login/')
+def eliminar_evento(request, pk):
+    evento = get_object_or_404(Evento, pk=pk)
+    # sólo usuarios admin/staff pueden eliminar
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Solo administradores pueden eliminar este evento')
+    if request.method == 'POST':
+        evento.delete()
+        return redirect('home')
+    return render(request, 'eventos/confirm_delete.html', {'evento': evento})

@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Evento, Participante
+from django.forms import formset_factory
 
 class EventoForm(forms.ModelForm):
     class Meta:
@@ -49,3 +50,9 @@ class ParticipanteForm(forms.ModelForm):
                 'class': 'form-control',
             }),
         }
+
+class ParticipanteFormClass(forms.Form):
+    nombre = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'placeholder': 'Ej: Juan Pérez', 'class': 'form-control'}))
+    correo = forms.EmailField(widget=forms.EmailInput(attrs={'placeholder': 'Ej: juan@example.com', 'class': 'form-control'}))
+
+ParticipanteFormSet = formset_factory(ParticipanteFormClass, extra=1)

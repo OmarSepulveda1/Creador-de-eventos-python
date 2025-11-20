@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block titulo %}Confirmar eliminación{% endblock %}
+
+{% block contenido %}
+<div class="py-4">
+    <h2>Eliminar evento</h2>
+    <div class="alert alert-warning">
+        ¿Estás seguro que deseas eliminar el evento "<strong>{{ evento.nombre }}</strong>" programado para {{ evento.fecha }}?
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <a class="btn btn-secondary" href="{% url 'home' %}">Cancelar</a>
+        <button class="btn btn-danger">Eliminar</button>
+    </form>
+</div>
+
+{% endblock %}

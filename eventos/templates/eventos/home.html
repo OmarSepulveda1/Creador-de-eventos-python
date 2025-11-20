@@ -7,6 +7,50 @@
 	<h1>Página de inicio de Eventos</h1>
 	<p>Bienvenido. Usa los botones para crear un nuevo evento o ver el registro.</p>
 
-	<a class="btn btn-primary" href="{% url 'crear_evento' %}">Crear nuevo evento</a>
+	<div class="mb-3">
+		{% if user.is_authenticated %}
+			<a class="btn btn-primary" href="{% url 'crear_evento' %}">Crear nuevo evento</a>
+		{% else %}
+			<a class="btn btn-outline-primary" href="{% url 'admin:login' %}">Inicia sesión para crear eventos</a>
+		{% endif %}
+	</div>
+
+	{% if eventos.exists %}
+	<div class="card mt-4">
+		<div class="card-body">
+			<h5 class="card-title">Eventos guardados</h5>
+			<table class="table table-sm">
+				<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>Fecha</th>
+						<th>Ubicación</th>
+						<th># Participantes</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for e in eventos %}
+					<tr>
+						<td>{{ e.nombre }}</td>
+							<td>{{ e.fecha }}</td>
+							<td>{{ e.ubicacion|default:"-" }}</td>
+							<td>{{ e.participantes.count }}</td>
+							<td>
+								{% if user.is_authenticated and user.is_staff %}
+									<a class="btn btn-sm btn-outline-primary me-1" href="{% url 'editar_evento' e.pk %}">Editar</a>
+									<a class="btn btn-sm btn-outline-danger" href="{% url 'eliminar_evento' e.pk %}">Eliminar</a>
+								{% else %}
+									<span class="text-muted">—</span>
+								{% endif %}
+							</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	{% else %}
+	<p class="text-muted mt-3">No hay eventos registrados todavía.</p>
+	{% endif %}
 </div>
 {% endblock %}

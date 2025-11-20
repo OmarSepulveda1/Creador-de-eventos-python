@@ -40,38 +40,40 @@
     {% endfor %}
     <h4>Participantes</h4>
 
-    {% for form in participante_forms %}
-        {# Mostrar errores por cada formulario de participante (si existen) #}
-        {% if form.errors %}
-        <div class="alert alert-danger">
-            <strong>Errores en participante {{ forloop.counter }}:</strong>
-            <ul class="mb-0">
-                {% for field, errors in form.errors.items %}
-                    <li>{{ field }}: {{ errors|join:", " }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+    {# Mostrar management form del formset #}
+    {% if participante_formset %}
+        {{ participante_formset.management_form }}
 
-        <div class="border p-3 mb-3">
-            {% for field in form %}
-            <div class="mb-2">
-                {{ field.label_tag }}
-                {{ field }}
-                {% with ph=field.field.widget.attrs.placeholder %}
-                    {% if ph %}
-                        <div class="form-text text-muted">Ejemplo: {{ ph }}</div>
-                    {% endif %}
-                {% endwith %}
-                {% for error in field.errors %}
-                    <div class="invalid-feedback d-block">{{ error }}</div>
+        {% for form in participante_formset.forms %}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Errores en participante {{ forloop.counter }}:</strong>
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items %}
+                        <li>{{ field }}: {{ errors|join:", " }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="border p-3 mb-3">
+                {% for field in form %}
+                <div class="mb-2">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% with ph=field.field.widget.attrs.placeholder %}
+                        {% if ph %}
+                            <div class="form-text text-muted">Ejemplo: {{ ph }}</div>
+                        {% endif %}
+                    {% endwith %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
                 {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-    {% endfor %}
-
-        <input type="hidden" name="total_participantes" value="{{ participante_forms|length }}">
+        {% endfor %}
+    {% endif %}
 
         <div class="d-flex justify-content-end mt-2">
             <button class="btn btn-primary">Registrar</button>
